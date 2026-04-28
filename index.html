@@ -896,11 +896,11 @@ function renderBackend() {
   return `
   <div class="card">
     <div class="card-title">Remote State Backend <span class="tag">STEP 2</span></div>
-    <div class="card-desc">// S3 only, S3 + DynamoDB locking, Terraform Cloud, or local (dev only)</div>
+    <div class="card-desc">// S3 only, S3 + DynamoDB locking, or Terraform Cloud</div>
     <div class="field" style="margin-bottom:20px">
       <label style="display:flex;align-items:center;gap:6px">Backend Type <span class="req">*</span><a class="help-link" href="https://developer.hashicorp.com/terraform/language/settings/backends/configuration" target="_blank" rel="noopener">?</a></label>
       <div class="pill-group" id="backendPills">
-        ${[['s3_only','S3 Only'],['s3','S3 + DynamoDB'],['tfc','Terraform Cloud'],['local','Local (dev)']].map(([v,l]) =>
+        ${[['s3_only','S3 Only'],['s3','S3 + DynamoDB'],['tfc','Terraform Cloud']].map(([v,l]) =>
           `<button type="button" class="pill ${backendType===v?'selected':''}" data-val="${v}" onclick="selectPill('backendType','${v}','backendPills');renderBackendDetails()">${l}</button>`
         ).join('')}
       </div>
@@ -927,8 +927,14 @@ function renderBackendDetails_inline(t) {
       </div>
     </div>
     <div class="field" style="margin-bottom:16px">
-      <label>KMS Key for encryption</label>
-      <input type="text" id="stateKmsKey" placeholder="aws/s3 (default) or custom ARN" value="${f('stateKmsKey')}"/>
+      <label style="display:flex;align-items:center;gap:6px">KMS Key for encryption <a class="help-link" href="https://docs.aws.amazon.com/kms/latest/developerguide/overview.html" target="_blank" rel="noopener">?</a></label>
+      <select id="stateKmsType" onchange="toggleKmsArn(this.value)">
+        ${opt(['AWS Managed Key (aws/s3)','Customer Managed Key (CMK)'], f('stateKmsType') || 'AWS Managed Key (aws/s3)')}
+      </select>
+      <div id="kmsArnField" style="${(f('stateKmsType')==='Customer Managed Key (CMK)') ? '' : 'display:none'}; margin-top:8px">
+        <input type="text" id="stateKmsKey" placeholder="arn:aws:kms:us-east-1:123456789012:key/..." value="${f('stateKmsKey')}"/>
+        <div class="hint">paste your CMK ARN or alias ARN</div>
+      </div>
     </div>
     <div class="toggle-row">
       <span class="toggle-label-wrap">
@@ -964,8 +970,14 @@ function renderBackendDetails_inline(t) {
         <input type="text" id="stateKeyPrefix" placeholder="terraform/state" value="${f('stateKeyPrefix') || 'terraform/state'}"/>
       </div>
       <div class="field">
-        <label>KMS Key for encryption</label>
-        <input type="text" id="stateKmsKey" placeholder="aws/s3 (default) or custom ARN" value="${f('stateKmsKey')}"/>
+        <label style="display:flex;align-items:center;gap:6px">KMS Key for encryption <a class="help-link" href="https://docs.aws.amazon.com/kms/latest/developerguide/overview.html" target="_blank" rel="noopener">?</a></label>
+        <select id="stateKmsType" onchange="toggleKmsArn(this.value)">
+          ${opt(['AWS Managed Key (aws/s3)','Customer Managed Key (CMK)'], f('stateKmsType') || 'AWS Managed Key (aws/s3)')}
+        </select>
+        <div id="kmsArnField" style="${(f('stateKmsType')==='Customer Managed Key (CMK)') ? '' : 'display:none'}; margin-top:8px">
+          <input type="text" id="stateKmsKey" placeholder="arn:aws:kms:us-east-1:123456789012:key/..." value="${f('stateKmsKey')}"/>
+          <div class="hint">paste your CMK ARN or alias ARN</div>
+        </div>
       </div>
     </div>
     <div class="toggle-row">
@@ -1000,7 +1012,7 @@ function renderBackendDetails_inline(t) {
       <input type="text" id="tfcHostname" placeholder="app.terraform.io" value="${f('tfcHostname')}"/>
     </div>`;
 
-  return `<div class="info-badge">ℹ️ Local backend — suitable for development only. State will not be shared or locked.</div>`;
+
 }
 
 function renderBackendDetails() {
@@ -1191,6 +1203,12 @@ function closePasswordPolicyModal(e) {
     document.getElementById('passwordPolicyModal').classList.remove('open');
 }
 
+function toggleKmsArn(val) {
+  formData['stateKmsType'] = val;
+  const field = document.getElementById('kmsArnField');
+  if (field) field.style.display = val === 'Customer Managed Key (CMK)' ? '' : 'none';
+}
+
 function togglePasswordPolicyField(on) {
   formData['enablePasswordPolicy'] = on;
   const sel = document.getElementById('passwordPolicy');
@@ -1291,7 +1309,7 @@ function collectStep(idx) {
   }
   if (id === 'backend') {
     grab('backendType');
-    ['stateBucket','lockTable','stateKeyPrefix','stateKmsKey','stateBucketVersioning','stateBucketPublicBlock',
+    ['stateBucket','lockTable','stateKeyPrefix','stateKmsKey','stateKmsType','stateBucketVersioning','stateBucketPublicBlock',
      'tfcOrg','tfcWorkspace','tfcHostname'].forEach(grab);
     if (!formData['backendType']) formData['backendType'] = 's3_only';
   }
@@ -1637,7 +1655,7 @@ ${d.enableGuardDuty === true || d.enableCloudTrail === true || d.enableSecurityH
 ${d.cicdPlatform && d.cicdPlatform !== '(none)' ? '- cicd.tf' : ''}
 
 CRITICAL: variables.tf, outputs.tf, and providers.tf MUST each be output as their own separate ### block with their own code fence. Do NOT merge them into main.tf or any other file.
-CRITICAL: backend.tf must ONLY contain configuration for the selected backend type. Do NOT include commented-out alternatives, placeholders, or examples for any other backend type. If the backend is local, generate only a local backend block. If S3 only, generate only an S3 backend block with no DynamoDB. If S3 + DynamoDB, generate only an S3 backend block with DynamoDB. If Terraform Cloud, generate only a cloud block. No commented-out code for unselected options.
+CRITICAL: backend.tf must ONLY contain configuration for the selected backend type. Do NOT include commented-out alternatives, placeholders, or examples for any other backend type. If S3 only, generate only an S3 backend block with no DynamoDB. If S3 + DynamoDB, generate only an S3 backend block with DynamoDB. If Terraform Cloud, generate only a cloud block. No commented-out code for unselected options.
 
 ACCOUNT IDENTITY:
 - Project / Org Name: ${d.projectName || 'myproject'}
@@ -1653,7 +1671,7 @@ REMOTE STATE BACKEND:
 ${(d.backendType === 's3_only' || d.backendType === 's3') && d.backendType !== 'tfc' ? `- State Bucket: ${d.stateBucket || d.projectName+'-tfstate'}
 - DynamoDB Lock Table: ${d.backendType === 's3' ? (d.lockTable || d.projectName+'-tflock') : 'none — no state locking'}
 - State Key Prefix: ${d.stateKeyPrefix || 'terraform/state'}
-- KMS Key: ${d.stateKmsKey || 'aws/s3'}
+- KMS Key: ${d.stateKmsType === 'Customer Managed Key (CMK)' ? (d.stateKmsKey || 'CUSTOMER_CMK_ARN_HERE') : 'aws/s3 (AWS managed key)'}
 - Bucket Versioning: ${d.stateBucketVersioning !== false ? 'yes' : 'no'}
 - Block Public Access: ${d.stateBucketPublicBlock !== false ? 'yes' : 'no'}` : ''}
 ${d.backendType === 'tfc' ? `- TFC Organization: ${d.tfcOrg || ''}
