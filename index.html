@@ -1540,7 +1540,7 @@ async function generateTerraform() {
       document.getElementById('loadingStatus').style.display = 'none';
     }, 500);
 
-    const filePattern = /(?:###\s*|##\s*File\s*\d+:\s*)([\w.\-/]+)\n```(?:hcl|terraform|json|sh|bash|makefile|)?\n([\s\S]*?)```/g;
+    const filePattern = /(?:###\s*|##\s*File\s*\d+:\s*)([\w.\-/]+)\n+```(?:hcl|terraform|json|sh|bash|makefile|)?\n([\s\S]*?)```/g;
     let match;
     while ((match = filePattern.exec(raw)) !== null) {
       generatedFiles[match[1]] = match[2].trim();
@@ -1625,6 +1625,8 @@ ${d.enableGuardDuty === true || d.enableCloudTrail === true || d.enableSecurityH
 ${d.cicdPlatform && d.cicdPlatform !== '(none)' ? '- cicd.tf' : ''}
 - Makefile
 
+CRITICAL: variables.tf, outputs.tf, and providers.tf MUST each be output as their own separate ### block with their own code fence. Do NOT merge them into main.tf or any other file.
+
 ACCOUNT IDENTITY:
 - Project / Org Name: ${d.projectName || 'myproject'}
 - AWS Account ID: ${d.accountId || '123456789012'}
@@ -1681,7 +1683,7 @@ Rules:
 - outputs.tf: expose useful ARNs, IDs, and URLs
 - versions.tf: required_providers block with exact source and version constraint for each provider
 - backend.tf: partial backend config (key only) — real values go in backend config files per env
-- The Makefile should include targets: init, plan, apply, destroy, fmt, validate for each environment
+- Each file MUST be preceded by exactly "### filename.ext" on its own line, immediately followed by the opening code fence with no blank lines in between
 - If using terraform-aws-modules, pin to a specific module version tag
 - Generate a README-style comment block at the top of main.tf explaining the overall architecture`;
 }
