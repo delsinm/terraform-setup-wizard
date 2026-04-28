@@ -1568,6 +1568,20 @@ async function generateTerraform() {
     });
 
     const data = await response.json();
+
+    if (!response.ok || !data.content) {
+      const errorBox = document.getElementById('errorBox');
+      errorBox.style.display = 'block';
+      errorBox.textContent = 'API Error: ' + (data.error?.message || data.error || `HTTP ${response.status}`);
+      clearInterval(interval);
+      clearInterval(msgInterval);
+      document.getElementById('loadingBar').style.display = 'none';
+      document.getElementById('loadingStatus').style.display = 'none';
+      btn.innerHTML = '⚡ Regenerate Terraform Files';
+      document.querySelector('.btn-generate').disabled = false;
+      return;
+    }
+
     const raw = data.content.map(b => b.text || '').join('');
 
     clearInterval(interval);
