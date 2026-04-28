@@ -769,7 +769,7 @@
       <div class="logo-icon">TF</div>
       <h1>AWS <span>Terraform</span> Setup Wizard</h1>
     </div>
-    <div class="subtitle">// configure your account → get production-ready Terraform bootstrapping code</div>
+    <div class="subtitle">// configure your account → get AI-generated Terraform bootstrapping code</div>
   </header>
 
   <div class="steps-track" id="stepsTrack"></div>
@@ -782,7 +782,7 @@
       <div class="logo-icon">TF</div>
       <h1>Generated <span>Terraform</span> Files</h1>
     </div>
-    <div class="subtitle">// review and copy your production-ready Terraform bootstrapping code</div>
+    <div class="subtitle">// review and copy your AI-generated Terraform bootstrapping code</div>
   </header>
 
   <div id="loadingBar" class="loading-bar" style="display:none"><div class="loading-bar-fill" id="loadingFill"></div></div>
@@ -1130,6 +1130,19 @@ function renderSecurity() {
       </span>
       <label class="toggle"><input type="checkbox" id="deleteDefaultVpc" ${f('deleteDefaultVpc')?'checked':''}><span class="slider"></span></label>
     </div>
+    <div class="toggle-row">
+      <span class="toggle-label-wrap">
+        <span class="toggle-label">Enforce AWS password policy</span>
+        <span class="help-link" onclick="document.getElementById('passwordPolicyModal').classList.add('open')" style="cursor:pointer">?</span>
+      </span>
+      <label class="toggle"><input type="checkbox" id="enablePasswordPolicy" ${f('enablePasswordPolicy')?'checked':''} onchange="togglePasswordPolicyField(this.checked)"><span class="slider"></span></label>
+    </div>
+    <div id="passwordPolicyFields" style="padding: 4px 0 8px">
+      <select id="passwordPolicy" style="width:100%" ${f('enablePasswordPolicy') ? '' : 'disabled style="opacity:0.4;cursor:not-allowed;width:100%"'}>
+        ${opt(['AWS Default','CIS Benchmark (strict)','NIST 800-63B','PCI DSS','SOC 2'], f('passwordPolicy') || 'AWS Default')}
+      </select>
+      <div class="hint">applied to the account IAM password policy resource</div>
+    </div>
 
     <hr class="section-divider"/>
 
@@ -1165,14 +1178,6 @@ function renderSecurity() {
       <div class="hint">${f('authMethod') !== 'oidc' ? 'select OIDC on the Providers step to enable this' : 'generates OIDC provider + deploy role if selected'}</div>
     </div>
 
-    <hr class="section-divider"/>
-    <div class="field">
-      <label style="display:flex;align-items:center;gap:6px">Password Policy <span class="help-link" onclick="document.getElementById('passwordPolicyModal').classList.add('open')" style="cursor:pointer">?</span></label>
-      <select id="passwordPolicy">
-        ${opt(['AWS Default','CIS Benchmark (strict)','None'], f('passwordPolicy') || 'AWS Default')}
-      </select>
-      <div class="hint">applied to the account IAM password policy resource</div>
-    </div>
   </div>`;
 }
 
@@ -1184,6 +1189,12 @@ function closeAssumeRoleModal(e) {
 function closePasswordPolicyModal(e) {
   if (e.target === document.getElementById('passwordPolicyModal'))
     document.getElementById('passwordPolicyModal').classList.remove('open');
+}
+
+function togglePasswordPolicyField(on) {
+  formData['enablePasswordPolicy'] = on;
+  const sel = document.getElementById('passwordPolicy');
+  if (sel) { sel.disabled = !on; sel.style.opacity = on ? '' : '0.4'; sel.style.cursor = on ? '' : 'not-allowed'; }
 }
 
 function toggleBudgetField(on) {
@@ -1253,6 +1264,7 @@ function renderReview() {
       <div class="summary-item"><div class="s-label">Security Hub</div><div class="s-val">${boolBadge(d.enableSecurityHub)}</div></div>
       <div class="summary-item"><div class="s-label">AWS Config</div><div class="s-val">${boolBadge(d.enableConfig)}</div></div>
       <div class="summary-item"><div class="s-label">Extra Providers</div><div class="s-val">${extras}</div></div>
+      <div class="summary-item"><div class="s-label">Password Policy</div><div class="s-val">${d.enablePasswordPolicy ? (d.passwordPolicy || 'AWS Default') : '— disabled'}</div></div>
       <div class="summary-item"><div class="s-label">Budget Alert</div><div class="s-val">${d.enableBudget ? '$'+d.budgetLimit+'/mo → '+d.budgetEmail : '— disabled'}</div></div>
     </div>
 
@@ -1289,7 +1301,7 @@ function collectStep(idx) {
   }
   if (id === 'security') {
     ['enableGuardDuty','enableCloudTrail','enableSecurityHub','enableConfig','enableAccessAnalyzer',
-     'deleteDefaultVpc','enableBudget','budgetLimit','budgetEmail','passwordPolicy','cicdPlatform'].forEach(grab);
+     'deleteDefaultVpc','enableBudget','budgetLimit','budgetEmail','enablePasswordPolicy','passwordPolicy','cicdPlatform'].forEach(grab);
     if (formData['authMethod'] !== 'oidc') formData['cicdPlatform'] = '(none)';
   }
 }
@@ -1540,7 +1552,7 @@ async function generateTerraform() {
       document.getElementById('loadingStatus').style.display = 'none';
     }, 500);
 
-    const filePattern = /(?:###\s*|##\s*File\s*\d+:\s*)([\w.\-/]+)\n+```(?:hcl|terraform|json|sh|bash|makefile|)?\n([\s\S]*?)```/g;
+    const filePattern = /(?:###\s*|##\s*File\s*\d+:\s*)([\w.\-/]+)\n+```(?:hcl|terraform|json|sh|bash|)?\n([\s\S]*?)```/g;
     let match;
     while ((match = filePattern.exec(raw)) !== null) {
       generatedFiles[match[1]] = match[2].trim();
@@ -1611,7 +1623,7 @@ function buildPrompt() {
   const envs = Array.isArray(d.environments) && d.environments.length ? d.environments : ['dev','prod'];
   const extras = Array.isArray(d.extraProviders) && d.extraProviders.length ? d.extraProviders.join(', ') : 'none';
 
-  return `You are a senior AWS infrastructure engineer and Terraform expert. Generate a complete, production-ready Terraform bootstrapping setup for a new AWS account based on the specification below.
+  return `You are a senior AWS infrastructure engineer and Terraform expert. Generate a complete, AI-generated Terraform bootstrapping setup for a new AWS account based on the specification below.
 
 Output EXACTLY these files, each preceded by its filename as "### filename" followed by a code block with the hcl language tag:
 - main.tf
@@ -1623,9 +1635,9 @@ Output EXACTLY these files, each preceded by its filename as "### filename" foll
 ${d.enableGuardDuty === true || d.enableCloudTrail === true || d.enableSecurityHub === true || d.enableConfig === true || d.enableAccessAnalyzer === true ? '- security.tf' : ''}
 
 ${d.cicdPlatform && d.cicdPlatform !== '(none)' ? '- cicd.tf' : ''}
-- Makefile
 
 CRITICAL: variables.tf, outputs.tf, and providers.tf MUST each be output as their own separate ### block with their own code fence. Do NOT merge them into main.tf or any other file.
+CRITICAL: backend.tf must ONLY contain configuration for the selected backend type. Do NOT include commented-out alternatives, placeholders, or examples for any other backend type. If the backend is local, generate only a local backend block. If S3 only, generate only an S3 backend block with no DynamoDB. If S3 + DynamoDB, generate only an S3 backend block with DynamoDB. If Terraform Cloud, generate only a cloud block. No commented-out code for unselected options.
 
 ACCOUNT IDENTITY:
 - Project / Org Name: ${d.projectName || 'myproject'}
@@ -1666,7 +1678,7 @@ SECURITY BASELINE:
 - IAM Access Analyzer: ${d.enableAccessAnalyzer !== false ? 'yes' : 'no'}
 - Delete Default VPC: ${d.deleteDefaultVpc ? 'yes' : 'no'}
 - Budget Alert: ${d.enableBudget ? 'yes — $'+d.budgetLimit+'/mo → '+d.budgetEmail : 'no'}
-- Password Policy: ${d.passwordPolicy || 'AWS Default'}
+- Password Policy: ${d.enablePasswordPolicy ? (d.passwordPolicy || 'AWS Default') : 'no — do not generate any aws_iam_account_password_policy resource. If disabled, omit the resource entirely.'}
 
 MODULES & INTEGRATIONS:
 - CI/CD Platform: ${d.cicdPlatform && d.cicdPlatform !== '(none)' ? d.cicdPlatform : 'none — do NOT generate cicd.tf or any OIDC provider/role resources'}
