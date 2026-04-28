@@ -90,7 +90,7 @@ The wizard produces a multi-file Terraform layout following AWS best practices:
 | `providers.tf` | Terraform providers information                                                   |
 | `backend.tf`   | Partial backend config (key only; real values go in per-env backend config files) |
 | `security.tf`  | Security options when configured                                                  |
-| `outputs.tf`   | Terraform outputs for debugging or code integrations                              |
+| `outputs.tf`   | Terraform outputs for debugging, CI/CD integrations, etc.                         |
 | `main.tf`      | Core resources and `for_each` where appropriate                                   |
 
 
