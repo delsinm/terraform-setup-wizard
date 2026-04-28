@@ -788,6 +788,11 @@
   <div id="loadingBar" class="loading-bar" style="display:none"><div class="loading-bar-fill" id="loadingFill"></div></div>
   <div id="loadingStatus" class="loading-status" style="display:none"></div>
   <div id="errorBox" class="error-box"></div>
+
+  <div id="resultsActions" style="display:none;margin-bottom:16px">
+    <button class="btn-generate" style="font-size:0.85rem;padding:10px 20px;width:auto" onclick="downloadZip()">⬇ Download ZIP</button>
+  </div>
+
   <div class="file-boxes" id="fileBoxes"></div>
 
   <div class="results-footer">
@@ -795,6 +800,7 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 // ─── Step definitions ──────────────────────────────────────────────────────────
 const STEPS = [
@@ -1595,10 +1601,26 @@ async function generateTerraform() {
   document.querySelector('.btn-generate').disabled = false;
 }
 
+async function downloadZip() {
+  const zip = new JSZip();
+  const projectName = (formData.projectName || 'project').replace(/[^a-z0-9-]/gi, '-').toLowerCase();
+  const environment = (Array.isArray(formData.environments) && formData.environments[0]) || 'dev';
+  const zipName = `${projectName}-${environment}-bootstrap.zip`;
+  Object.entries(generatedFiles).forEach(([fname, content]) => {
+    zip.file(fname, content);
+  });
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = zipName; a.click();
+  URL.revokeObjectURL(url);
+}
+
 function renderFileTabs() {
   const container = document.getElementById('fileBoxes');
   const files = Object.keys(generatedFiles);
   if (!files.length) return;
+  document.getElementById('resultsActions').style.display = 'block';
   container.innerHTML = files.map(fname => {
     return `
     <div class="file-box">
@@ -1626,6 +1648,7 @@ function copyFile(fname, btn) {
 
 function backToWizard() {
   document.getElementById('resultsPage').style.display = 'none';
+  document.getElementById('resultsActions').style.display = 'none';
   document.getElementById('wizardPage').style.display = 'block';
   const genBtn = document.querySelector('.btn-generate');
   if (genBtn) {
@@ -1657,6 +1680,7 @@ ${d.enableGuardDuty === true || d.enableCloudTrail === true || d.enableSecurityH
 ${d.cicdPlatform && d.cicdPlatform !== '(none)' ? '- cicd.tf' : ''}
 
 CRITICAL: variables.tf, outputs.tf, and providers.tf MUST each be output as their own separate ### block with their own code fence. Do NOT merge them into main.tf or any other file.
+CRITICAL: ALL security resources (GuardDuty, CloudTrail, Security Hub, AWS Config, IAM Access Analyzer, aws_iam_account_password_policy, aws_budgets_budget) MUST be placed exclusively in security.tf. Do NOT include any security resources in main.tf or any other file.
 CRITICAL: backend.tf must ONLY contain configuration for the selected backend type. Do NOT include commented-out alternatives, placeholders, or examples for any other backend type. If S3 only, generate only an S3 backend block with no DynamoDB. If S3 + DynamoDB, generate only an S3 backend block with DynamoDB. If Terraform Cloud, generate only a cloud block. No commented-out code for unselected options.
 
 ACCOUNT IDENTITY:
