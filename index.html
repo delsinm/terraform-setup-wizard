@@ -1467,6 +1467,17 @@ function next() {
   collectStep(currentStep);
   const missing = validateStep(currentStep);
   if (missing.length > 0) { showModal(missing); return; }
+  if (STEPS[currentStep].id === 'security') {
+    const anySecurityEnabled = formData.enableGuardDuty === true || formData.enableCloudTrail === true ||
+      formData.enableSecurityHub === true || formData.enableConfig === true || formData.enableAccessAnalyzer === true;
+    if (anySecurityEnabled) {
+      document.getElementById('orgWarningModal').classList.add('open');
+      return;
+    }
+  }
+  if (currentStep < STEPS.length - 1) { currentStep++; renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+}
+function proceedFromSecurity() {
   if (currentStep < STEPS.length - 1) { currentStep++; renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 }
 function back() { if (currentStep > 0) goTo(currentStep - 1); }
@@ -1784,5 +1795,28 @@ document.addEventListener('keydown', function(e) {
   }
 });
 </script>
+<!-- Org-wide security warning modal -->
+<div class="modal-overlay" id="orgWarningModal" onclick="if(event.target===this)document.getElementById('orgWarningModal').classList.remove('open')">
+  <div class="modal" style="max-width:520px;position:relative">
+    <button onclick="document.getElementById('orgWarningModal').classList.remove('open')" style="position:absolute;top:12px;right:12px;background:none;border:1.5px solid currentColor;border-radius:50%;width:1.5rem;height:1.5rem;cursor:pointer;opacity:0.4;font-size:0.75rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;" title="Close">✕</button>
+    <div class="modal-title">⚠️ AWS Organizations Notice</div>
+    <div class="modal-subtitle">You have enabled one or more security services. If this account is part of an AWS Organization, these services may already be managed centrally from a delegated admin or management account:</div>
+    <div class="modal-fields">
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--danger)">
+        <div class="modal-field-name">Potentially org-managed services</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">GuardDuty, CloudTrail, Security Hub, and AWS Config are commonly managed org-wide from a security or management account. Enabling them here could conflict with existing org-level configuration.</div>
+      </div>
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
+        <div class="modal-field-name">Recommendation</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Check with your AWS administrator before proceeding. If you are bootstrapping a standalone account, it is safe to continue.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <button class="modal-close" style="background:var(--muted);flex:1" onclick="document.getElementById('orgWarningModal').classList.remove('open')">← Back to Safety</button>
+      <button class="modal-close" style="background:var(--accent);flex:1" onclick="document.getElementById('orgWarningModal').classList.remove('open');proceedFromSecurity()">Proceed →</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
