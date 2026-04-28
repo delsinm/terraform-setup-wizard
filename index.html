@@ -1029,7 +1029,7 @@ function renderBackendDetails() {
 
 // ─── Step 3: Providers ────────────────────────────────────────────────────────
 function renderProviders() {
-  const authMethod = f('authMethod') || 'iam_role';
+  const authMethod = f('authMethod') || 'env_vars';
   return `
   <div class="card">
     <div class="card-title">Provider Configuration <span class="tag">STEP 3</span></div>
@@ -1049,9 +1049,9 @@ function renderProviders() {
     </div>
 
     <div class="field" style="margin-bottom:20px">
-      <label>AWS Auth Method <span class="req">*</span></label>
+      <label style="display:flex;align-items:center;gap:6px">AWS Auth Method <span class="req">*</span><span class="help-link" onclick="document.getElementById('authMethodModal').classList.add('open')" style="cursor:pointer">?</span></label>
       <div class="pill-group" id="authPills">
-        ${[['iam_role','IAM Role (assume)'],['env_vars','Env Vars'],['profile','Named Profile'],['oidc','OIDC / GitHub Actions']].map(([v,l]) =>
+        ${[['env_vars','Env Vars'],['profile','Named Profile'],['iam_role','IAM Role (assume)'],['oidc','OIDC / GitHub Actions']].map(([v,l]) =>
           `<button type="button" class="pill ${authMethod===v?'selected':''}" data-val="${v}" onclick="selectPill('authMethod','${v}','authPills');renderAuthDetails()">${l}</button>`
         ).join('')}
       </div>
@@ -1411,7 +1411,7 @@ function validateStep(idx) {
     }
     // Auth conditional rules
     if (rule.special === 'auth_iam') {
-      if ((formData['authMethod'] || 'iam_role') !== 'iam_role') return;
+      if ((formData['authMethod'] || 'env_vars') !== 'iam_role') return;
       const el = document.getElementById(rule.id);
       if (!el || !el.value.trim()) { missing.push(rule); if (el) { el.classList.add('field-error'); el.addEventListener('input', () => el.classList.remove('field-error'), { once: true }); } }
       return;
@@ -1687,7 +1687,7 @@ function backToWizard() {
 function buildPrompt() {
   const d = formData;
   const backendLabel = { s3_only: 'S3 Only (no locking)', s3: 'S3 + DynamoDB', tfc: 'Terraform Cloud', local: 'Local' }[d.backendType] || 'S3 Only (no locking)';
-  const authLabel = { iam_role:'IAM Role (assume_role)', env_vars:'Environment Variables', profile:'Named Profile', oidc:'OIDC' }[d.authMethod] || 'iam_role';
+  const authLabel = { iam_role:'IAM Role (assume_role)', env_vars:'Environment Variables', profile:'Named Profile', oidc:'OIDC' }[d.authMethod] || 'env_vars';
   const envs = Array.isArray(d.environments) && d.environments.length ? d.environments : ['dev','prod'];
   const extras = Array.isArray(d.extraProviders) && d.extraProviders.length ? d.extraProviders.join(', ') : 'none';
 
@@ -1789,7 +1789,15 @@ formData['enableCloudTrail'] = false;
 formData['enableSecurityHub'] = false;
 formData['enableConfig'] = false;
 formData['enableAccessAnalyzer'] = false;
-document.documentElement.setAttribute('data-theme', 'light');
+const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+document.getElementById('themeBtn').textContent = prefersDark ? '☀️' : '🌙';
+
+// Keep in sync if the user changes OS theme while the page is open
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+  document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = e.matches ? '☀️' : '🌙';
+});
 renderAll();
 
 // Close any open modal on Esc
@@ -1799,6 +1807,34 @@ document.addEventListener('keydown', function(e) {
   }
 });
 </script>
+<!-- AWS Auth Method info modal -->
+<div class="modal-overlay" id="authMethodModal" onclick="if(event.target===this)document.getElementById('authMethodModal').classList.remove('open')">
+  <div class="modal" style="max-width:540px;position:relative">
+    <button onclick="document.getElementById('authMethodModal').classList.remove('open')" style="position:absolute;top:12px;right:12px;background:none;border:1.5px solid currentColor;border-radius:50%;width:1.5rem;height:1.5rem;cursor:pointer;opacity:0.4;font-size:0.75rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;" title="Close">✕</button>
+    <div class="modal-title">AWS Auth Method</div>
+    <div class="modal-subtitle">Tells Terraform how to authenticate to AWS when running plan or apply. Each option produces different code in providers.tf.</div>
+    <div class="modal-fields">
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
+        <div class="modal-field-name">Env Vars</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Terraform reads <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface2);padding:1px 4px;border-radius:3px">AWS_ACCESS_KEY_ID</code> and <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface2);padding:1px 4px;border-radius:3px">AWS_SECRET_ACCESS_KEY</code> from the environment. The simplest option — recommended for most users getting started.</div>
+      </div>
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
+        <div class="modal-field-name">Named Profile</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Terraform uses a named profile from <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface2);padding:1px 4px;border-radius:3px">~/.aws/credentials</code>. Useful when working locally with multiple AWS accounts.</div>
+      </div>
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
+        <div class="modal-field-name">IAM Role (assume)</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Terraform assumes a specific IAM role via <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface2);padding:1px 4px;border-radius:3px">sts:AssumeRole</code>. Your current credentials must have permission to assume it. Common in CI/CD pipelines.</div>
+      </div>
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
+        <div class="modal-field-name">OIDC / GitHub Actions</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Passwordless authentication — no long-lived credentials. Your CI/CD provider exchanges a short-lived token for AWS credentials via an IAM OIDC identity provider. Most secure option for automated pipelines.</div>
+      </div>
+    </div>
+    <button class="modal-close" style="background:var(--accent)" onclick="document.getElementById('authMethodModal').classList.remove('open')">Got it</button>
+  </div>
+</div>
+
 <!-- Org-wide security warning modal -->
 <div class="modal-overlay" id="orgWarningModal" onclick="if(event.target===this)document.getElementById('orgWarningModal').classList.remove('open')">
   <div class="modal" style="max-width:520px;position:relative">
