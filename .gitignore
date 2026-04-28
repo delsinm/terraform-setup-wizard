@@ -1,0 +1,97 @@
+# ==========================================
+# DevOps & IT Operations .gitignore Template
+# ==========================================
+
+# --- Security & Secrets ---
+# Never commit private keys or local environment files
+*.pem
+*.key
+*.pub
+*.cert
+*.crt
+*.pfx
+.env
+.env.local
+.env.*.local
+auth.json
+secrets.tfvars
+*.secret
+
+# --- Infrastructure as Code (Terraform / OpenTofu) ---
+# Exclude local provider plugins and state files
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfplan
+.terraform.lock.hcl
+
+# --- Atmos ---
+.atmos/
+plans/
+
+# --- Containerization & Orchestration ---
+.docker/
+docker-compose.override.yml
+kubeconfig
+.kube/
+
+# --- Cloud CLI & Tooling ---
+# AWS, Azure, GCP, and local tool configs
+.aws/
+.azure/
+.gcloud/
+.serverless/
+.pulumi/
+.terraformrc
+terraform.rc
+
+# --- Python (Automation Scripts) ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+.python-version
+.pytest_cache/
+.coverage
+
+# --- Shell & Logs ---
+*.log
+history.log
+.sh_history
+.bash_history
+.zsh_history
+
+# --- Package Managers & Build Artifacts ---
+node_modules/
+dist/
+build/
+.npm
+.yarn/
+vendor/
+
+# --- System & IDE ---
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Ansible ---
+# Ignore retry files created when a playbook fails
+*.retry
+# Ignore local vault password files (if used for automation)
+.ansible_vault_pw
+# Ignore temporary files created by ansible-galaxy
+ansible-galaxy-cache/
+
+# --- Chef ---
+# Ignore local kitchen test states and hidden folders
+.chef/
+.kitchen/
+.vercel
