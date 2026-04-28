@@ -701,23 +701,31 @@
 </div>
 
 <!-- Password Policy info modal -->
-<div class="modal-overlay" id="passwordPolicyModal" onclick="closePasswordPolicyModal(event)">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-icon" style="background:rgba(124,58,237,0.1);border-color:rgba(124,58,237,0.25)">🔐</div>
+<div class="modal-overlay" id="passwordPolicyModal" onclick="if(event.target===this)document.getElementById('passwordPolicyModal').classList.remove('open')">
+  <div class="modal" style="max-width:520px;position:relative">
+    <button onclick="document.getElementById('passwordPolicyModal').classList.remove('open')" style="position:absolute;top:12px;right:12px;background:none;border:1.5px solid currentColor;border-radius:50%;width:1.5rem;height:1.5rem;cursor:pointer;opacity:0.4;font-size:0.75rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;" title="Close">✕</button>
     <div class="modal-title">Password Policy Options</div>
-    <div class="modal-subtitle">Choose how strict the IAM account password policy should be. This is applied via the <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:3px">aws_iam_account_password_policy</code> resource.</div>
+    <div class="modal-subtitle">Sets the IAM account password policy via the <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface2);padding:1px 4px;border-radius:3px">aws_iam_account_password_policy</code> resource. Choose the standard that matches your compliance requirements.</div>
     <div class="modal-fields">
       <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
         <div class="modal-field-name">AWS Default</div>
-        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Mirrors the AWS console defaults: min 8 chars, no complexity requirements enforced beyond that. Suitable for low-risk or internal-only accounts.</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Mirrors AWS console defaults: min 8 chars, no enforced complexity. Suitable for low-risk or internal-only accounts.</div>
       </div>
-      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--danger)">
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
         <div class="modal-field-name">CIS Benchmark (strict)</div>
-        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Enforces CIS AWS Foundations controls: min 14 chars, uppercase + lowercase + numbers + symbols required, no reuse of last 24 passwords, 90-day expiry, max 5 login attempts before lockout.</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">CIS AWS Foundations controls: min 14 chars, uppercase + lowercase + numbers + symbols, no reuse of last 24 passwords, 90-day expiry, max 5 login attempts before lockout.</div>
       </div>
-      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--muted)">
-        <div class="modal-field-name">None</div>
-        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Skips the password policy resource entirely. Use this when the account relies on SSO / Identity Center and console password login is disabled.</div>
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
+        <div class="modal-field-name">NIST 800-63B</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Favors length over complexity: min 8 chars, no mandatory rotation or complexity rules. Focuses on breach detection rather than frequent password changes.</div>
+      </div>
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
+        <div class="modal-field-name">PCI DSS</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Required for cardholder data environments: min 7 chars, complexity required, 90-day expiry, 12-password history. Use if your account handles payment card data.</div>
+      </div>
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
+        <div class="modal-field-name">SOC 2</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Similar to CIS but slightly less strict: min 12 chars, complexity required, 90-day expiry. Common in SaaS and service organisation audits.</div>
       </div>
     </div>
     <button class="modal-close" style="background:var(--accent)" onclick="document.getElementById('passwordPolicyModal').classList.remove('open')">Got it</button>
@@ -1204,11 +1212,6 @@ function renderSecurity() {
 function closeAssumeRoleModal(e) {
   if (e.target === document.getElementById('assumeRoleModal'))
     document.getElementById('assumeRoleModal').classList.remove('open');
-}
-
-function closePasswordPolicyModal(e) {
-  if (e.target === document.getElementById('passwordPolicyModal'))
-    document.getElementById('passwordPolicyModal').classList.remove('open');
 }
 
 function toggleKmsArn(val) {
