@@ -61,7 +61,7 @@ The key is never exposed to the browser — all Anthropic API calls are proxied 
 
 ```
 .
-├── terraform-setup-wizard.html   # Single-page frontend (no build step)
+├── index.html   # Single-page frontend (no build step)
 ├── api/
 │   └── generate.js               # Vercel serverless function — Anthropic API proxy
 └── vercel.json                   # Routing config
