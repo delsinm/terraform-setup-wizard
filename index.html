@@ -676,6 +676,30 @@
 
 <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
 
+<!-- Account ID info modal -->
+<div class="modal-overlay" id="accountIdModal" onclick="if(event.target===this)document.getElementById('accountIdModal').classList.remove('open')">
+  <div class="modal" style="max-width:520px;position:relative">
+    <button onclick="document.getElementById('accountIdModal').classList.remove('open')" style="position:absolute;top:12px;right:12px;background:none;border:1.5px solid currentColor;border-radius:50%;width:1.5rem;height:1.5rem;cursor:pointer;opacity:0.4;font-size:0.75rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;" title="Close">✕</button>
+    <div class="modal-title">AWS Account ID</div>
+    <div class="modal-subtitle">Your AWS Account ID is a unique 12-digit number that identifies your AWS account. It is required to scope resources and state files correctly.</div>
+    <div class="modal-fields">
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
+        <div class="modal-field-name">Format</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Exactly 12 digits, no hyphens or spaces. Example: <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface2);padding:1px 4px;border-radius:3px">123456789012</code></div>
+      </div>
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
+        <div class="modal-field-name">① Find it in the AWS Console</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Sign in to the <strong>AWS Console</strong>, then click your account name in the top-right corner. Your 12-digit Account ID is displayed in the dropdown menu.</div>
+      </div>
+      <div class="modal-field-item" style="flex-direction:column;align-items:flex-start;gap:4px;border-left-color:var(--accent)">
+        <div class="modal-field-name">② Find it via the AWS CLI</div>
+        <div class="modal-field-hint" style="margin-left:0;line-height:1.5">Run the following command with your credentials configured:<br/><code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface2);padding:2px 6px;border-radius:3px;display:inline-block;margin-top:4px">aws sts get-caller-identity --query Account --output text</code></div>
+      </div>
+    </div>
+    <button class="modal-close" style="background:var(--accent)" onclick="document.getElementById('accountIdModal').classList.remove('open')">Got it</button>
+  </div>
+</div>
+
 <!-- Password Policy info modal -->
 <div class="modal-overlay" id="passwordPolicyModal" onclick="closePasswordPolicyModal(event)">
   <div class="modal" style="max-width:520px">
@@ -806,8 +830,8 @@ function toggleChip(key, val, el) {
 
 // ─── Step 1: Account ──────────────────────────────────────────────────────────
 function renderAccount() {
-  const envs = ['dev','staging','prod','sandbox','shared'];
-  const sel = Array.isArray(f('environments')) ? f('environments') : ['dev','prod'];
+  const envs = ['dev','staging','prod','sandbox'];
+  const sel = Array.isArray(f('environments')) ? f('environments') : ['dev'];
   return `
   <div class="card">
     <div class="card-title">Account & Project Identity <span class="tag">STEP 1</span></div>
@@ -819,31 +843,26 @@ function renderAccount() {
         <div class="hint">used as a prefix for all resources</div>
       </div>
       <div class="field">
-        <label>AWS Account ID <span class="req">*</span></label>
+        <label style="display:flex;align-items:center;gap:6px">AWS Account ID <span class="req">*</span><span class="help-link" onclick="document.getElementById('accountIdModal').classList.add('open')" style="cursor:pointer">?</span></label>
         <input type="text" id="accountId" placeholder="123456789012" value="${f('accountId')}"/>
         <div class="hint">12-digit account ID</div>
       </div>
     </div>
     <div class="grid-2" style="margin-bottom:16px">
       <div class="field">
-        <label>Primary Region <span class="req">*</span></label>
+        <label>AWS Region <span class="req">*</span></label>
         <select id="primaryRegion">
           ${opt(['us-east-1','us-east-2','us-west-1','us-west-2','eu-west-1','eu-west-2','eu-central-1','ap-southeast-1','ap-southeast-2','ap-northeast-1','ca-central-1'], f('primaryRegion') || 'us-east-1')}
         </select>
       </div>
-      <div class="field">
-        <label>Secondary / DR Region</label>
-        <select id="secondaryRegion">
-          ${opt(['(none)','us-east-1','us-east-2','us-west-1','us-west-2','eu-west-1','eu-west-2','eu-central-1','ap-southeast-1','ap-southeast-2','ap-northeast-1','ca-central-1'], f('secondaryRegion') || '(none)')}
-        </select>
-      </div>
+
     </div>
     <div class="field" style="margin-bottom:16px">
-      <label>Environments to bootstrap</label>
+      <label>Environment to bootstrap</label>
       <div class="chip-grid" id="envChips">
         ${envs.map(e => `<div class="service-chip ${sel.includes(e)?'selected':''}" onclick="toggleEnvChip('${e}',this)">${e}</div>`).join('')}
       </div>
-      <div class="hint">each env gets its own workspace / state file</div>
+      <div class="hint">select one environment to generate state files for</div>
     </div>
     <hr class="section-divider"/>
     <div class="grid-2" style="margin-bottom:16px">
@@ -857,7 +876,7 @@ function renderAccount() {
       </div>
     </div>
     <div class="field">
-      <label>Terraform Version Constraint</label>
+      <label style="display:flex;align-items:center;gap:6px">Terraform Version Constraint <a class="help-link" href="https://developer.hashicorp.com/terraform/language/expressions/version-constraints" target="_blank" rel="noopener">?</a></label>
       <input type="text" id="tfVersion" placeholder=">= 1.7.0" value="${f('tfVersion') || '>= 1.7.0'}"/>
       <div class="hint">semver constraint used in required_version</div>
     </div>
@@ -865,10 +884,10 @@ function renderAccount() {
 }
 
 function toggleEnvChip(val, el) {
-  if (!Array.isArray(formData['environments'])) formData['environments'] = ['dev','prod'];
-  const idx = formData['environments'].indexOf(val);
-  if (idx >= 0) { formData['environments'].splice(idx, 1); el.classList.remove('selected'); }
-  else { formData['environments'].push(val); el.classList.add('selected'); }
+  // Single-select: deselect all chips, then select the clicked one
+  document.querySelectorAll('#envChips .service-chip').forEach(c => c.classList.remove('selected'));
+  formData['environments'] = [val];
+  el.classList.add('selected');
 }
 
 // ─── Step 2: Backend ──────────────────────────────────────────────────────────
@@ -1221,7 +1240,7 @@ function renderReview() {
     <div class="summary-grid">
       <div class="summary-item"><div class="s-label">Project Name</div><div class="s-val">${d.projectName || '—'}</div></div>
       <div class="summary-item"><div class="s-label">AWS Account ID</div><div class="s-val">${d.accountId || '—'}</div></div>
-      <div class="summary-item"><div class="s-label">Primary Region</div><div class="s-val">${d.primaryRegion || 'us-east-1'}</div></div>
+      <div class="summary-item"><div class="s-label">AWS Region</div><div class="s-val">${d.primaryRegion || 'us-east-1'}</div></div>
       <div class="summary-item"><div class="s-label">Environments</div><div class="s-val">${envs}</div></div>
       <div class="summary-item"><div class="s-label">Backend Type</div><div class="s-val">${d.backendType || 's3_only'}</div></div>
       <div class="summary-item"><div class="s-label">State Bucket</div><div class="s-val">${d.stateBucket || d.tfcOrg || '(local)'}</div></div>
@@ -1255,8 +1274,8 @@ function collectStep(idx) {
   };
 
   if (id === 'account') {
-    ['projectName','accountId','primaryRegion','secondaryRegion','ownerTag','costCenter','tfVersion'].forEach(grab);
-    if (!Array.isArray(formData['environments'])) formData['environments'] = ['dev','prod'];
+    ['projectName','accountId','primaryRegion','ownerTag','costCenter','tfVersion'].forEach(grab);
+    if (!Array.isArray(formData['environments'])) formData['environments'] = ['dev'];
   }
   if (id === 'backend') {
     grab('backendType');
@@ -1280,8 +1299,7 @@ const STEP_RULES = {
   account: [
     { id: 'projectName', label: 'Project Name', hint: 'required' },
     { id: 'accountId',   label: 'AWS Account ID', hint: '12-digit number', special: 'account_id' },
-    { id: 'primaryRegion', label: 'Primary Region', hint: 'required' },
-    { id: 'secondaryRegion', label: 'Secondary / DR Region', hint: 'must differ from primary region', special: 'region_collision' },
+    { id: 'primaryRegion', label: 'AWS Region', hint: 'required' },
   ],
   backend: [
     { id: 'backendType', label: 'Backend Type', hint: 'select one', special: 'pill', pillGroup: 'backendPills' },
@@ -1319,12 +1337,7 @@ function validateStep(idx) {
     }
     if (rule.special === 'region_collision') {
       const primary = document.getElementById('primaryRegion');
-      const secondary = document.getElementById('secondaryRegion');
-      if (primary && secondary && secondary.value !== '(none)' && primary.value === secondary.value) {
-        missing.push(rule);
-        secondary.classList.add('field-error');
-        secondary.addEventListener('change', () => secondary.classList.remove('field-error'), { once: true });
-      }
+
       return;
     }
     if (rule.special === 'account_id') {
@@ -1527,7 +1540,7 @@ async function generateTerraform() {
       document.getElementById('loadingStatus').style.display = 'none';
     }, 500);
 
-    const filePattern = /### ([\w.\-/]+)\n```(?:hcl|terraform|json|sh|bash|makefile|)?\n([\s\S]*?)```/g;
+    const filePattern = /(?:###\s*|##\s*File\s*\d+:\s*)([\w.\-/]+)\n```(?:hcl|terraform|json|sh|bash|makefile|)?\n([\s\S]*?)```/g;
     let match;
     while ((match = filePattern.exec(raw)) !== null) {
       generatedFiles[match[1]] = match[2].trim();
@@ -1607,16 +1620,15 @@ Output EXACTLY these files, each preceded by its filename as "### filename" foll
 - backend.tf
 - providers.tf
 - versions.tf
-${d.enableGuardDuty !== false || d.enableCloudTrail !== false || d.enableSecurityHub !== false || d.enableConfig !== false ? '- security.tf' : ''}
-${d.networkingType === 'vpc' ? '- networking.tf' : ''}
+${d.enableGuardDuty === true || d.enableCloudTrail === true || d.enableSecurityHub === true || d.enableConfig === true || d.enableAccessAnalyzer === true ? '- security.tf' : ''}
+
 ${d.cicdPlatform && d.cicdPlatform !== '(none)' ? '- cicd.tf' : ''}
 - Makefile
 
 ACCOUNT IDENTITY:
 - Project / Org Name: ${d.projectName || 'myproject'}
 - AWS Account ID: ${d.accountId || '123456789012'}
-- Primary Region: ${d.primaryRegion || 'us-east-1'}
-- Secondary Region: ${d.secondaryRegion && d.secondaryRegion !== '(none)' ? d.secondaryRegion : 'none'}
+- AWS Region: ${d.primaryRegion || 'us-east-1'}
 - Environments: ${envs.join(', ')}
 - Team/Owner Tag: ${d.ownerTag || 'platform-team'}
 - Cost Center Tag: ${d.costCenter || ''}
@@ -1654,18 +1666,13 @@ SECURITY BASELINE:
 - Budget Alert: ${d.enableBudget ? 'yes — $'+d.budgetLimit+'/mo → '+d.budgetEmail : 'no'}
 - Password Policy: ${d.passwordPolicy || 'AWS Default'}
 
-NETWORKING:
-- Setup: ${d.networkingType || 'vpc'}
-${d.networkingType === 'vpc' ? `- VPC CIDR: ${d.vpcCidr || '10.0.0.0/16'}
-- Number of AZs: ${d.numAzs || '3'}
-- NAT Gateway: ${d.natGateway || 'Single'}` : ''}
-${d.networkingType === 'existing' ? `- Existing VPC ID: ${d.existingVpcId || ''}` : ''}
-
 MODULES & INTEGRATIONS:
 - CI/CD Platform: ${d.cicdPlatform && d.cicdPlatform !== '(none)' ? d.cicdPlatform : 'none — do NOT generate cicd.tf or any OIDC provider/role resources'}
 - Module Source: Terraform Registry (terraform-aws-modules)
 
 Rules:
+- NEVER generate networking resources of any kind — no VPCs, subnets, route tables, internet gateways, NAT gateways, security groups, NACLs, or any aws_vpc_* / aws_subnet_* / aws_route_* / aws_internet_gateway / aws_nat_gateway resources. Networking is managed separately and must not appear in any generated file.
+- For each security option marked "no" in the SECURITY BASELINE, do NOT generate any Terraform resources, modules, variables, or outputs for that feature — not even as commented-out examples or placeholders. Only generate code for options explicitly marked "yes".
 - All resources tagged: Project, Environment, Owner, ManagedBy=Terraform, CostCenter (if provided)
 - No hardcoded secrets, account IDs, or region strings — use variables with sensible defaults
 - Use for_each where appropriate (e.g. iterating environments or AZs)
@@ -1688,7 +1695,7 @@ function toggleTheme() {
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-formData['environments'] = ['dev','prod'];
+formData['environments'] = ['dev'];
 formData['backendType'] = 's3_only';
 formData['enableGuardDuty'] = false;
 formData['enableCloudTrail'] = false;
@@ -1697,6 +1704,13 @@ formData['enableConfig'] = false;
 formData['enableAccessAnalyzer'] = false;
 document.documentElement.setAttribute('data-theme', 'light');
 renderAll();
+
+// Close any open modal on Esc
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+});
 </script>
 </body>
 </html>
