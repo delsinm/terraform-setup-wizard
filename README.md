@@ -1,6 +1,8 @@
-# Terraform AWS Account Setup Wizard
+![aws_setup_wizard](./images/aws_setup_wizard.png)
 
-A browser-based tool that generates production-ready Terraform configuration files for AWS account setup — no Terraform experience required. Fill out a guided form, click **Generate Terraform Files**, and receive a complete, commented set of `.tf` files ready to hand off to your cloud or DevOps team.
+# AWS Terraform Setup Wizard
+
+A browser-based tool that generates Terraform configuration files for AWS account setup. Fill out a guided form, click **Generate Terraform Files**, and receive a complete, commented set of `.tf` files ready to hand off to your cloud or DevOps team.
 
 ---
 
@@ -81,13 +83,15 @@ The key is never exposed to the browser — all Anthropic API calls are proxied 
 
 The wizard produces a multi-file Terraform layout following AWS best practices:
 
-| File | Contents |
-|---|---|
-| `versions.tf` | `required_providers` block with source and version constraints |
-| `providers.tf` | Terraform providers information |
-| `backend.tf` | Partial backend config (key only; real values go in per-env backend config files) |
-| `security.tf` | Security options when configured |
-| `outputs.tf` | Terraform outputs for debugging or code integrations |
-| `main.tf` | Core resources and `for_each` where appropriate |
+
+| File           | Contents                                                                          |
+| -------------- | --------------------------------------------------------------------------------- |
+| `versions.tf`  | `required_providers` block with source and version constraints                    |
+| `providers.tf` | Terraform providers information                                                   |
+| `backend.tf`   | Partial backend config (key only; real values go in per-env backend config files) |
+| `security.tf`  | Security options when configured                                                  |
+| `outputs.tf`   | Terraform outputs for debugging or code integrations                              |
+| `main.tf`      | Core resources and `for_each` where appropriate                                   |
+
 
 All files include inline comments explaining each block so your team can review and modify them before applying.
