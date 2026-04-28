@@ -14,7 +14,7 @@ The wizard walks you through five steps:
 4. **Security** — Security guardrails such as MFA requirements, IP restrictions, and password policy options
 5. **Review** — A summary of all selected options before generation
 
-On submit, the configuration is sent to the Anthropic API via a secure server-side proxy. The generated output is a set of named `.tf` files (`main.tf`, `versions.tf`, `backend.tf`, a `Makefile`, and others as applicable), each displayed in a syntax-highlighted panel with a one-click copy button.
+On submit, the configuration is sent to the Anthropic API via a secure server-side proxy. The generated output is a set of named `.tf` files (`main.tf`, `versions.tf`, `backend.tf`, `providers.tf`, and others as applicable), each displayed in a syntax-highlighted panel with a one-click copy button. A zip file download link is also provided. 
 
 ---
 
