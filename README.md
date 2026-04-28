@@ -84,8 +84,10 @@ The wizard produces a multi-file Terraform layout following AWS best practices:
 | File | Contents |
 |---|---|
 | `versions.tf` | `required_providers` block with source and version constraints |
+| `providers.tf` | Terraform providers information |
 | `backend.tf` | Partial backend config (key only; real values go in per-env backend config files) |
 | `security.tf` | Security options when configured |
+| `outputs.tf` | Terraform outputs for debugging or code integrations |
 | `main.tf` | Core resources and `for_each` where appropriate |
 
 All files include inline comments explaining each block so your team can review and modify them before applying.
