@@ -9,7 +9,7 @@ A browser-based tool that generates production-ready Terraform configuration fil
 The wizard walks you through five steps:
 
 1. **Account** — Project name, primary region, environments (dev, staging, prod, etc.), default tagging strategy, and CI/CD platform
-2. **Backend** — State backend type (S3 only, S3 + DynamoDB locking, Terraform Cloud, or local), with fields for bucket names, lock tables, or TFC org/workspace as appropriate
+2. **Backend** — State backend type (S3 only, S3 + DynamoDB locking, or Terraform Cloud), with fields for bucket names, lock tables, or TFC org/workspace as appropriate
 3. **Providers** — AWS provider version constraints and authentication method (IAM role assumption, environment variables, named profile, or OIDC)
 4. **Security** — Security guardrails such as MFA requirements, IP restrictions, and password policy options
 5. **Review** — A summary of all selected options before generation
