@@ -248,7 +248,7 @@ The wizard produces a multi-file Terraform layout following AWS best practices:
 | `providers.tf` | Terraform providers information                                                   |
 | `backend.tf`   | Partial backend config (key only; real values go in per-env backend config files) |
 | `security.tf`  | Security options when configured                                                  |
-| `main.tf`      | Core resources and `for_each` where appropriate                                   |
+| `main.tf`      | Core resources                                                                    |
 
 
 All files include a standard header comment. Non-obvious architectural decisions are annotated inline.
