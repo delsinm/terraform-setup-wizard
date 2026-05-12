@@ -891,7 +891,7 @@ function renderAccount() {
     </div>
     <div class="field">
       <label style="display:flex;align-items:center;gap:6px">Terraform Version Constraint <a class="help-link" href="https://developer.hashicorp.com/terraform/language/expressions/version-constraints" target="_blank" rel="noopener">?</a></label>
-      <input type="text" id="tfVersion" placeholder=">= 1.7.0" value="${f('tfVersion') || '>= 1.7.0'}"/>
+      <input type="text" id="tfVersion" placeholder=">= 1.5.7" value="${f('tfVersion') || '>= 1.5.7'}"/>
       <div class="hint">semver constraint used in required_version</div>
     </div>
   </div>`;
@@ -1733,7 +1733,7 @@ ACCOUNT IDENTITY:
 - Environments: ${envs.join(', ')}
 - Team/Owner Tag: ${d.ownerTag || 'platform-team'}
 - Cost Center Tag: ${d.costCenter || ''}
-- Terraform Version Constraint: ${d.tfVersion || '>= 1.7.0'}
+- Terraform Version Constraint: ${d.tfVersion || '>= 1.5.7'}
 
 REMOTE STATE BACKEND:
 - Backend Type: ${backendLabel}
