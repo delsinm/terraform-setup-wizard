@@ -34,3 +34,5 @@ Each file MUST be preceded by exactly `### filename.ext` on its own line, immedi
 - `backend.tf`: fully hardcoded backend block with all values populated from the user specification — bucket, key, region, encrypt, and dynamodb_table (if applicable).
 - If using `terraform-aws-modules`, pin to a specific module version tag.
 - All resources tagged: `Project`, `Environment`, `Owner`, `ManagedBy=Terraform`, `CostCenter` (if provided).
+- When implementing cost notification email (`aws_budgets_budget`), ALWAYS use `cost_filter` — NEVER use `cost_filters` as it has been deprecated and will cause errors.
+- When implementing cost notification email (`aws_budgets_budget`), ALWAYS set `budget_type = "COST"`.
