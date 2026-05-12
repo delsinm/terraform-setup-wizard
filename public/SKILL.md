@@ -36,3 +36,4 @@ Each file MUST be preceded by exactly `### filename.ext` on its own line, immedi
 - All resources tagged: `Project`, `Environment`, `Owner`, `ManagedBy=Terraform`, `CostCenter` (if provided).
 - When implementing cost notification email (`aws_budgets_budget`), ALWAYS use `cost_filter` — NEVER use `cost_filters` as it has been deprecated and will cause errors.
 - When implementing cost notification email (`aws_budgets_budget`), ALWAYS set `budget_type = "COST"`.
+- When implementing cost notification email (`aws_budgets_budget`), NEVER include `notification_frequency` — it is not a valid argument. AWS Budgets notifications are event-driven, not frequency-based.
